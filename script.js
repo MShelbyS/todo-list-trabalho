@@ -1,10 +1,49 @@
-// Seleciona o formulário
-const form = document.querySelector("#taskForm");
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
-// Lista de tarefas
+function saveTasks(){
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+// Seleciona elementos
+const form = document.querySelector("#taskForm");
 const taskList = document.querySelector("#taskList");
 
-// Evento de envio do formulário
+// Função para criar tarefa na tela
+function createTaskElement(task){
+
+    const li = document.createElement("li");
+
+    li.innerHTML = `
+        <strong>${task.title}</strong><br>
+        ${task.description}<br>
+        Prioridade: ${task.priority}<br><br>
+        <button class="completeBtn">Concluir</button>
+        <button class="deleteBtn">Excluir</button>
+    `;
+
+    taskList.appendChild(li);
+
+    const completeBtn = li.querySelector(".completeBtn");
+    const deleteBtn = li.querySelector(".deleteBtn");
+
+    completeBtn.addEventListener("click", function(){
+        li.style.textDecoration = "line-through";
+    });
+
+    deleteBtn.addEventListener("click", function(){
+
+        const index = Array.from(taskList.children).indexOf(li);
+
+        tasks.splice(index,1);
+
+        saveTasks();
+
+        li.remove();
+
+    });
+}
+
+// Evento do formulário
 form.addEventListener("submit", function(event){
 
     event.preventDefault();
@@ -18,32 +57,23 @@ form.addEventListener("submit", function(event){
         return;
     }
 
-    const li = document.createElement("li");
+    const task = {
+        title: title,
+        description: description,
+        priority: priority
+    };
 
-    li.innerHTML = `
-        <strong>${title}</strong><br>
-        ${description}<br>
-        Prioridade: ${priority}<br><br>
-        <button class="completeBtn">Concluir</button>
-        <button class="deleteBtn">Excluir</button>
-    `;
+    tasks.push(task);
 
-    taskList.appendChild(li);
+    saveTasks();
 
-    // botão concluir
-    const completeBtn = li.querySelector(".completeBtn");
-
-    completeBtn.addEventListener("click", function(){
-        li.style.textDecoration = "line-through";
-    });
-
-    // botão excluir
-    const deleteBtn = li.querySelector(".deleteBtn");
-
-    deleteBtn.addEventListener("click", function(){
-        li.remove();
-    });
+    createTaskElement(task);
 
     form.reset();
 
+});
+
+// Carregar tarefas salvas
+tasks.forEach(task => {
+    createTaskElement(task);
 });
