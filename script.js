@@ -1,12 +1,12 @@
 // ===============================
-// Carrega as tarefas salvas no navegador
-// Se não existir nenhuma, cria um array vazio
+// Carrega tarefas salvas no navegador
+// Caso não exista nenhuma, cria um array vazio
 // ===============================
 let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
 
 // ===============================
-// Função responsável por salvar o array de tarefas
+// Função responsável por salvar tarefas
 // no localStorage do navegador
 // ===============================
 function saveTasks() {
@@ -19,74 +19,87 @@ function saveTasks() {
 // ===============================
 const form = document.querySelector("#taskForm");
 const taskList = document.querySelector("#taskList");
+const searchInput = document.querySelector("#search");
 
 
 // ===============================
-// Função responsável por renderizar
-// (mostrar) todas as tarefas na tela
+// Função responsável por mostrar
+// as tarefas na tela
 // ===============================
-function renderTasks() {
+function renderTasks(filter = "") {
 
-    // Limpa a lista antes de renderizar novamente
+    // limpa lista antes de renderizar
     taskList.innerHTML = "";
 
-    // Percorre todas as tarefas do array
-    tasks.forEach((task, index) => {
+    // filtra tarefas pela busca
+    const filteredTasks = tasks.filter(task =>
+        task.title.toLowerCase().includes(filter.toLowerCase())
+    );
 
-        // Cria elemento da lista
+    // se não houver tarefas
+    if(filteredTasks.length === 0){
+
+        const li = document.createElement("li");
+        li.textContent = "Nenhuma tarefa cadastrada";
+
+        taskList.appendChild(li);
+
+        return;
+    }
+
+    // percorre tarefas filtradas
+    filteredTasks.forEach((task, index) => {
+
         const li = document.createElement("li");
 
-        // Conteúdo da tarefa
         li.innerHTML = `
             <strong>${task.title}</strong><br>
             ${task.description}<br>
-            Prioridade: ${task.priority}<br><br>
+            Prioridade: ${task.priority}<br>
+            Criado em: ${task.date}<br><br>
 
             <button class="completeBtn">Concluir</button>
             <button class="deleteBtn">Excluir</button>
         `;
 
-        // Se a tarefa estiver marcada como concluída
-        // aplica o estilo de texto riscado
-        if (task.completed) {
+        // aplica estilo se tarefa concluída
+        if(task.completed){
             li.style.textDecoration = "line-through";
         }
 
-        // Seleciona os botões
         const completeBtn = li.querySelector(".completeBtn");
         const deleteBtn = li.querySelector(".deleteBtn");
 
 
         // ===============================
-        // Evento para marcar tarefa como concluída
-        // Alterna entre concluída e não concluída
+        // Evento para concluir tarefa
         // ===============================
-        completeBtn.addEventListener("click", function () {
+        completeBtn.addEventListener("click", function(){
 
             task.completed = !task.completed;
 
             saveTasks();
 
-            renderTasks();
+            renderTasks(searchInput.value);
 
         });
 
 
         // ===============================
         // Evento para excluir tarefa
-        // Remove do array e salva novamente
         // ===============================
-        deleteBtn.addEventListener("click", function () {
+        deleteBtn.addEventListener("click", function(){
 
-            tasks.splice(index, 1);
+            const realIndex = tasks.indexOf(task);
+
+            tasks.splice(realIndex,1);
 
             saveTasks();
 
-            renderTasks();
+            renderTasks(searchInput.value);
 
         });
 
-        // Adiciona a tarefa na lista HTML
         taskList.appendChild(li);
 
     });
@@ -98,46 +111,51 @@ function renderTasks() {
 // Evento de envio do formulário
 // Cria uma nova tarefa
 // ===============================
-form.addEventListener("submit", function (event) {
+form.addEventListener("submit", function(event){
 
-    // Impede a página de recarregar
     event.preventDefault();
 
-    // Captura os valores dos campos
     const title = document.querySelector("#title").value;
     const description = document.querySelector("#description").value;
     const priority = document.querySelector("#priority").value;
 
-    // Verifica se o título foi preenchido
-    if (title.trim() === "") {
+    if(title.trim() === ""){
         alert("Digite um título!");
         return;
     }
 
-    // Cria objeto da tarefa
+    // cria objeto da tarefa
     const task = {
         title: title,
         description: description,
         priority: priority,
+        date: new Date().toLocaleDateString(),
         completed: false
     };
 
-    // Adiciona a tarefa ao array
     tasks.push(task);
 
-    // Salva no localStorage
     saveTasks();
 
-    // Atualiza a lista na tela
-    renderTasks();
+    renderTasks(searchInput.value);
 
-    // Limpa os campos do formulário
     form.reset();
 
 });
 
 
 // ===============================
-// Renderiza as tarefas ao carregar o site
+// Evento de pesquisa de tarefas
+// Filtra tarefas pelo título
+// ===============================
+searchInput.addEventListener("input", function(){
+
+    renderTasks(searchInput.value);
+
+});
+
+
+// ===============================
+// Mostra tarefas ao abrir o site
 // ===============================
 renderTasks();
